@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { fetchInitData } from '@/lib/api';
+import { isLightGradient } from '@/lib/colorUtils';
 
 import TimelineStepper from './TimelineStepper';
 import MobileStepIndicator from './MobileStepIndicator';
@@ -24,7 +25,6 @@ interface BookingPageProps {
 export default function BookingPage({ businessSlug }: BookingPageProps) {
   const {
     currentStep,
-    serviceSubStep,
     theme,
     company,
     isLoading,
@@ -34,6 +34,7 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
     setCategories,
     setServices,
     setServicesByCategory,
+    setEmployeesByServiceId,
     setLoading,
   } = useBookingStore();
 
@@ -82,6 +83,11 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
         if (data.servicesByCategory) {
           setServicesByCategory(data.servicesByCategory);
         }
+
+        // Set employees by service
+        if (data.employeesByServiceId) {
+          setEmployeesByServiceId(data.employeesByServiceId);
+        }
       } catch (err) {
         console.error('Failed to load init data:', err);
         setError('Failed to load booking data. Please try again later.');
@@ -91,7 +97,7 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
     }
 
     loadInitData();
-  }, [businessSlug, setTheme, setCompany, setEmployeesUI, setCategories, setServices, setServicesByCategory, setLoading]);
+  }, [businessSlug, setTheme, setCompany, setEmployeesUI, setCategories, setServices, setServicesByCategory, setEmployeesByServiceId, setLoading]);
 
   // Apply theme CSS variables
   useEffect(() => {
@@ -99,23 +105,43 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
     document.documentElement.style.setProperty('--secondary-color', theme.secondaryColor);
     document.documentElement.style.setProperty('--bg-from', theme.bgFrom);
     document.documentElement.style.setProperty('--bg-to', theme.bgTo);
+
+    // Set adaptive placeholder and scrollbar colors based on background brightness
+    const light = isLightGradient(theme.bgFrom, theme.bgTo);
+    document.documentElement.style.setProperty(
+      '--placeholder-color',
+      light ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.30)'
+    );
+    document.documentElement.style.setProperty(
+      '--scrollbar-color',
+      light ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)'
+    );
+    document.documentElement.style.setProperty(
+      '--scrollbar-color-hover',
+      light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)'
+    );
   }, [theme]);
+
+  // Derive adaptive colors for the page shell
+  const isLight = isLightGradient(theme.bgFrom, theme.bgTo);
+  const textPrimary = isLight ? '#111111' : 'rgba(255,255,255,1)';
+  const textMuted = isLight ? 'rgba(0,0,0,0.60)' : 'rgba(255,255,255,0.60)';
+  const borderColor = isLight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+  const bgCard = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.10)';
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <EmployeeSelection />;
+        return <CategorySelection />;
       case 2:
-        return serviceSubStep === 'category' ? (
-          <CategorySelection />
-        ) : (
-          <ServiceSelection />
-        );
+        return <ServiceSelection />;
       case 3:
-        return <DateTimeSelection companySlug={businessSlug} />;
+        return <EmployeeSelection />;
       case 4:
-        return <CustomerDetails />;
+        return <DateTimeSelection companySlug={businessSlug} />;
       case 5:
+        return <CustomerDetails />;
+      case 6:
         return <Confirmation companySlug={businessSlug} />;
       default:
         return null;
@@ -132,18 +158,18 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
   if (isLoading) {
     return (
       <div
-        className="min-h-screen flex flex-col items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #f5f0ff 0%, #eff6ff 40%, #f0fdfa 100%)' }}
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: '#ffffff' }}
       >
         <div
           className="animate-spin"
           style={{
-            width: 52,
-            height: 52,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
-            background: 'conic-gradient(from 0deg, #8b5cf6, #3b82f6, #14b8a6, transparent 75%)',
-            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 5px))',
-            mask: 'radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 5px))',
+            background: 'conic-gradient(from 0deg, #8b5cf6, #3b82f6, #14b8a6, transparent 70%)',
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
           }}
         />
       </div>
@@ -159,14 +185,26 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
           background: `linear-gradient(135deg, ${theme.bgFrom}, ${theme.bgTo})`,
         }}
       >
-        <div className="text-center max-w-md bg-white/10 backdrop-blur-lg rounded-2xl p-8">
-          <h1 className="font-serif text-2xl mb-4 text-white">
+        <div
+          className="text-center max-w-md backdrop-blur-lg rounded-2xl p-8"
+          style={{ backgroundColor: bgCard }}
+        >
+          <h1 className="font-serif text-2xl mb-4" style={{ color: textPrimary }}>
             Napaka pri nalaganju
           </h1>
-          <p className="text-white/70 mb-6">{error}</p>
+          <p className="mb-6" style={{ color: textMuted }}>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-full border-2 border-white text-white hover:bg-white hover:text-gray-800 transition-all duration-300"
+            className="px-6 py-3 rounded-full border-2 transition-all duration-300"
+            style={{ borderColor: textPrimary, color: textPrimary }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = textPrimary;
+              e.currentTarget.style.color = isLight ? 'white' : '#111111';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = textPrimary;
+            }}
           >
             Poskusi znova
           </button>
@@ -183,16 +221,16 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
       }}
     >
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b" style={{ borderColor }}>
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="font-serif text-xl font-bold text-white">
+            <h1 className="font-serif text-xl font-bold" style={{ color: textPrimary }}>
               {company?.naziv || 'Rezervacija'}
             </h1>
           </div>
 
-          <div className="hidden lg:block text-sm text-white/60 font-light tracking-wide">
-            Korak {currentStep} od 5
+          <div className="hidden lg:block text-sm font-light tracking-wide" style={{ color: textMuted }}>
+            Korak {currentStep} od 6
           </div>
         </div>
       </header>
@@ -208,10 +246,13 @@ export default function BookingPage({ businessSlug }: BookingPageProps) {
 
           {/* Step content */}
           <div className="flex-1 pb-24 lg:pb-0">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 lg:p-8">
+            <div
+              className="backdrop-blur-lg rounded-2xl p-6 lg:p-8"
+              style={{ backgroundColor: bgCard }}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`${currentStep}-${serviceSubStep}`}
+                  key={currentStep}
                   variants={pageVariants}
                   initial="initial"
                   animate="animate"

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, Clock } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 
 export default function ServiceSelection() {
   const {
@@ -12,6 +13,8 @@ export default function ServiceSelection() {
     selectService,
     theme,
   } = useBookingStore();
+
+  const colors = useThemeColors();
 
   // Get services for the selected category
   const categoryServices = selectedCategory
@@ -56,20 +59,23 @@ export default function ServiceSelection() {
       <motion.div variants={itemVariants} className="mb-12">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors mb-6 group"
+          className="flex items-center gap-2 transition-colors mb-6 group"
+          style={{ color: colors.textFaint }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = colors.textMuted; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = colors.textFaint; }}
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm">Nazaj na kategorije</span>
         </button>
 
         <div className="flex items-center gap-3 mb-3">
-          <h1 className="font-serif text-3xl md:text-4xl text-white">
+          <h1 className="font-serif text-3xl md:text-4xl" style={{ color: colors.text }}>
             <span style={{ color: theme.primaryColor }}>
               {selectedCategory?.name}
             </span>
           </h1>
         </div>
-        <p className="text-white/60">Izberi storitev</p>
+        <p style={{ color: colors.textMuted }}>Izberi storitev</p>
       </motion.div>
 
       {/* Service list */}
@@ -104,13 +110,13 @@ export default function ServiceSelection() {
                     <h3
                       className="font-serif text-xl mb-2 transition-colors duration-300"
                       style={{
-                        color: isSelected ? theme.primaryColor : 'white',
+                        color: isSelected ? theme.primaryColor : colors.text,
                       }}
                     >
                       {service.naziv}
                     </h3>
                     {service.opis && (
-                      <p className="text-white/50 text-sm leading-relaxed">
+                      <p className="text-sm leading-relaxed" style={{ color: colors.textFaint }}>
                         {service.opis}
                       </p>
                     )}
@@ -121,12 +127,12 @@ export default function ServiceSelection() {
                     <span
                       className="font-light text-xl tracking-wider"
                       style={{
-                        color: isSelected ? theme.primaryColor : 'white',
+                        color: isSelected ? theme.primaryColor : colors.text,
                       }}
                     >
                       €{service.cena}
                     </span>
-                    <span className="text-white/40 text-sm flex items-center gap-1 mt-1">
+                    <span className="text-sm flex items-center gap-1 mt-1" style={{ color: colors.textSubtle }}>
                       <Clock className="w-3 h-3" />
                       <span className="font-light tracking-wider">{formatDuration(service.trajanjeMin)}</span>
                     </span>
@@ -135,7 +141,7 @@ export default function ServiceSelection() {
               </div>
 
               {/* Bottom divider */}
-              <div className="h-[1px] bg-white/10" />
+              <div className="h-[1px]" style={{ backgroundColor: colors.border }} />
             </motion.div>
           );
         })}

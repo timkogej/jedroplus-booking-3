@@ -3,20 +3,21 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { BookingStep } from '@/types';
 
 interface Step {
   number: BookingStep;
   title: string;
-  description?: string;
 }
 
 const steps: Step[] = [
-  { number: 1, title: 'Specialist' },
+  { number: 1, title: 'Kategorija' },
   { number: 2, title: 'Storitev' },
-  { number: 3, title: 'Datum in ura' },
-  { number: 4, title: 'Podatki' },
-  { number: 5, title: 'Potrditev' },
+  { number: 3, title: 'Specialist' },
+  { number: 4, title: 'Datum in ura' },
+  { number: 5, title: 'Podatki' },
+  { number: 6, title: 'Potrditev' },
 ];
 
 export default function TimelineStepper() {
@@ -35,28 +36,26 @@ export default function TimelineStepper() {
     goToStep,
   } = useBookingStore();
 
+  const colors = useThemeColors();
+
   // Find selected employee from employeesUI
   const selectedEmployee = employeesUI.find(e => e.id === selectedEmployeeId);
 
   const getStepDescription = (stepNumber: BookingStep): string | undefined => {
     switch (stepNumber) {
       case 1:
+        return selectedCategory?.name;
+      case 2:
+        return selectedService?.naziv;
+      case 3:
         if (anyPerson) return 'Kdorkoli';
         return selectedEmployee?.label;
-      case 2:
-        if (selectedService) {
-          return `${selectedCategory?.name} → ${selectedService.naziv}`;
-        }
-        if (selectedCategory) {
-          return selectedCategory.name;
-        }
-        return undefined;
-      case 3:
+      case 4:
         if (selectedDate && selectedTime) {
           return `${selectedDate.toLocaleDateString('sl-SI', { month: 'short', day: 'numeric' })} ob ${selectedTime}`;
         }
         return undefined;
-      case 4:
+      case 5:
         if (customerDetails?.firstName) {
           return `${customerDetails.firstName} ${customerDetails.lastName}`;
         }
@@ -87,7 +86,7 @@ export default function TimelineStepper() {
                 <div
                   className="absolute left-[11px] top-[28px] w-[2px] h-[60px]"
                   style={{
-                    backgroundColor: isCompleted ? theme.primaryColor : 'rgba(255,255,255,0.2)',
+                    backgroundColor: isCompleted ? theme.primaryColor : colors.border,
                   }}
                 />
               )}
@@ -107,7 +106,7 @@ export default function TimelineStepper() {
                   <motion.div
                     className="w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-300"
                     style={{
-                      borderColor: isCompleted || isCurrent ? theme.primaryColor : 'rgba(255,255,255,0.3)',
+                      borderColor: isCompleted || isCurrent ? theme.primaryColor : colors.borderStrong,
                       backgroundColor: isCompleted ? theme.primaryColor : 'transparent',
                     }}
                     whileHover={canNavigate ? { scale: 1.1 } : {}}
@@ -131,7 +130,7 @@ export default function TimelineStepper() {
                     <span
                       className="text-xs font-mono uppercase tracking-wider"
                       style={{
-                        color: isCurrent ? theme.primaryColor : 'rgba(255,255,255,0.5)',
+                        color: isCurrent ? theme.primaryColor : colors.textFaint,
                       }}
                     >
                       {step.number}.
@@ -141,7 +140,7 @@ export default function TimelineStepper() {
                         canNavigate ? 'group-hover:underline' : ''
                       }`}
                       style={{
-                        color: isCompleted || isCurrent ? 'white' : 'rgba(255,255,255,0.5)',
+                        color: isCompleted || isCurrent ? colors.text : colors.textFaint,
                       }}
                     >
                       {step.title}
@@ -153,7 +152,8 @@ export default function TimelineStepper() {
                     <motion.p
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="text-sm text-white/50 mt-1 truncate max-w-[180px]"
+                      className="text-sm mt-1 truncate max-w-[180px]"
+                      style={{ color: colors.textFaint }}
                     >
                       {description}
                     </motion.p>

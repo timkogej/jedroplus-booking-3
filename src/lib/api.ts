@@ -43,7 +43,8 @@ export async function fetchTimeSlots(
   date: string,
   serviceId: string,
   employeeId: string | null,
-  anyPerson: boolean
+  anyPerson: boolean,
+  eligibleEmployeeIds?: string[]
 ): Promise<string[]> {
   const response = await fetch(API_BASE_URL, {
     method: 'POST',
@@ -57,6 +58,7 @@ export async function fetchTimeSlots(
       serviceId,
       employeeId,
       any_person: anyPerson,
+      ...(anyPerson && eligibleEmployeeIds?.length ? { employeeIds: eligibleEmployeeIds } : {}),
     }),
   });
 
@@ -85,7 +87,9 @@ export interface BookingSubmission {
   phone: string;
   gender?: string;
   notes?: string;
+  gdprPrivacyConsent?: boolean;
   gdprSendMarketing?: boolean;
+  consentTimestamp?: string;
 }
 
 export async function submitBooking(
@@ -111,7 +115,9 @@ export async function submitBooking(
       customerPhone: data.phone,
       customerGender: data.gender || '',
       customerNote: data.notes || '',
+      gdprPrivacyConsent: data.gdprPrivacyConsent || false,
       gdprSendMarketing: data.gdprSendMarketing || false,
+      consentTimestamp: data.consentTimestamp || new Date().toISOString(),
     }),
   });
 

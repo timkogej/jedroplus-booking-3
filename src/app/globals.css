@@ -45,6 +45,12 @@ body {
   color: white;
 }
 
+/* Placeholder color driven by CSS variable set in BookingPage */
+::placeholder {
+  color: var(--placeholder-color, rgba(255, 255, 255, 0.30));
+  opacity: 1;
+}
+
 /* Custom scrollbar for time slots list */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -53,9 +59,9 @@ body {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-color, rgba(255, 255, 255, 0.15));
   border-radius: 2px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--scrollbar-color-hover, rgba(255, 255, 255, 0.25));
 }

@@ -3,10 +3,28 @@
 import { motion } from 'framer-motion';
 import { ChevronRight, Users } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { EmployeeUI } from '@/types';
 
 export default function EmployeeSelection() {
-  const { employeesUI, selectedEmployeeId, anyPerson, selectEmployee, theme } = useBookingStore();
+  const {
+    employeesUI,
+    eligibleEmployeeIds,
+    selectedEmployeeId,
+    anyPerson,
+    selectEmployee,
+    theme,
+  } = useBookingStore();
+
+  const colors = useThemeColors();
+
+  // Filter employees to only those eligible for the selected service
+  const filteredEmployees: EmployeeUI[] = eligibleEmployeeIds.length > 0
+    ? (() => {
+        const eligibleSet = new Set(eligibleEmployeeIds);
+        return employeesUI.filter(emp => eligibleSet.has(String(emp.id)));
+      })()
+    : employeesUI;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -66,11 +84,11 @@ export default function EmployeeSelection() {
               style={{
                 border: isSelected
                   ? `3px solid ${theme.primaryColor}`
-                  : '2px solid rgba(255,255,255,0.3)',
+                  : `2px solid ${colors.borderStrong}`,
                 backgroundColor: isSelected
                   ? `${theme.primaryColor}20`
-                  : 'rgba(255,255,255,0.1)',
-                color: isSelected ? theme.primaryColor : 'white',
+                  : colors.bgCard,
+                color: isSelected ? theme.primaryColor : colors.text,
                 boxShadow: isSelected ? `0 0 20px ${theme.primaryColor}40` : 'none',
               }}
             >
@@ -87,12 +105,12 @@ export default function EmployeeSelection() {
             <h3
               className="font-serif text-xl mb-1 transition-colors duration-300"
               style={{
-                color: isSelected ? theme.primaryColor : 'white',
+                color: isSelected ? theme.primaryColor : colors.text,
               }}
             >
               {isAnyOption ? 'Kdorkoli' : employee?.label}
             </h3>
-            <p className="text-white/60 text-sm">
+            <p className="text-sm" style={{ color: colors.textMuted }}>
               {isAnyOption
                 ? 'Izberi najboljši termin zame'
                 : employee?.subtitle}
@@ -117,7 +135,7 @@ export default function EmployeeSelection() {
         </div>
 
         {/* Bottom divider */}
-        <div className="h-[1px] bg-white/10 ml-4" />
+        <div className="h-[1px] ml-4" style={{ backgroundColor: colors.border }} />
       </motion.div>
     );
   };
@@ -131,22 +149,37 @@ export default function EmployeeSelection() {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="font-serif text-3xl md:text-4xl mb-3 text-white">
+        <h1 className="font-serif text-3xl md:text-4xl mb-3" style={{ color: colors.text }}>
           Izberi{' '}
           <span style={{ color: theme.primaryColor }}>
             specialista
           </span>
         </h1>
-        <p className="text-white/60">
+        <p style={{ color: colors.textMuted }}>
           Izberi osebo, ki te bo postregel/a
         </p>
       </motion.div>
 
-      {/* Employee list */}
-      <div className="space-y-0">
-        {renderEmployeeItem(null, true)}
-        {employeesUI.map((employee) => renderEmployeeItem(employee))}
-      </div>
+      {/* Empty state */}
+      {filteredEmployees.length === 0 ? (
+        <motion.div
+          variants={itemVariants}
+          className="py-12 text-center"
+        >
+          <p className="text-lg" style={{ color: colors.textMuted }}>
+            Za to storitev ni na voljo nobenega osebja.
+          </p>
+          <p className="text-sm mt-2" style={{ color: colors.textSubtle }}>
+            Prosim izberite drugo storitev.
+          </p>
+        </motion.div>
+      ) : (
+        /* Employee list */
+        <div className="space-y-0">
+          {renderEmployeeItem(null, true)}
+          {filteredEmployees.map((employee) => renderEmployeeItem(employee))}
+        </div>
+      )}
     </motion.div>
   );
 }

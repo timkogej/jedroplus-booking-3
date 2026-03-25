@@ -3,9 +3,18 @@
 import { motion } from 'framer-motion';
 import { Layers } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
+
+function storitevLabel(n: number): string {
+  if (n === 1) return '1 storitev';
+  if (n === 2) return '2 storitvi';
+  if (n === 3 || n === 4) return `${n} storitve`;
+  return `${n} storitev`;
+}
 
 export default function CategorySelection() {
-  const { categories, selectedCategory, selectCategory, theme } = useBookingStore();
+  const { categories, selectedCategory, selectCategory, theme, servicesByCategory } = useBookingStore();
+  const colors = useThemeColors();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -31,13 +40,13 @@ export default function CategorySelection() {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="mb-16">
-        <h1 className="font-serif text-3xl md:text-4xl mb-3 text-white">
+        <h1 className="font-serif text-3xl md:text-4xl mb-3" style={{ color: colors.text }}>
           Izberi{' '}
           <span style={{ color: theme.primaryColor }}>
             kategorijo
           </span>
         </h1>
-        <p className="text-white/60">
+        <p style={{ color: colors.textMuted }}>
           Katero vrsto storitve iščeš?
         </p>
       </motion.div>
@@ -67,10 +76,10 @@ export default function CategorySelection() {
                   style={{
                     border: isSelected
                       ? `3px solid ${theme.primaryColor}`
-                      : '2px solid rgba(255,255,255,0.3)',
+                      : `2px solid ${colors.borderStrong}`,
                     backgroundColor: isSelected
                       ? `${theme.primaryColor}20`
-                      : 'rgba(255,255,255,0.1)',
+                      : colors.bgCard,
                   }}
                 >
                   <Layers
@@ -79,7 +88,7 @@ export default function CategorySelection() {
                     style={{
                       color: isSelected
                         ? theme.primaryColor
-                        : 'rgba(255,255,255,0.7)',
+                        : colors.textMuted,
                     }}
                   />
                 </div>
@@ -89,15 +98,15 @@ export default function CategorySelection() {
               <h3
                 className="font-serif text-lg mb-1 transition-colors duration-300"
                 style={{
-                  color: isSelected ? theme.primaryColor : 'white',
+                  color: isSelected ? theme.primaryColor : colors.text,
                 }}
               >
                 {category.name}
               </h3>
 
               {/* Service count */}
-              <p className="text-sm text-white/50 mb-4">
-                {category.service_count} storitev
+              <p className="text-sm mb-4" style={{ color: colors.textFaint }}>
+                {storitevLabel((servicesByCategory[category.id] ?? []).length)}
               </p>
 
               {/* Underline indicator */}

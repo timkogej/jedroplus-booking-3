@@ -3,13 +3,11 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 
 export default function NavigationBar() {
   const {
     currentStep,
-    serviceSubStep,
-    selectedCategory,
-    selectedService,
     selectedDate,
     selectedTime,
     theme,
@@ -17,35 +15,27 @@ export default function NavigationBar() {
     nextStep,
   } = useBookingStore();
 
+  const colors = useThemeColors();
+
   // Determine if next button should be shown and enabled
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1:
-        return true; // Employee selection auto-advances
-      case 2:
-        if (serviceSubStep === 'category') {
-          return !!selectedCategory;
-        }
-        return !!selectedService;
-      case 3:
-        return !!selectedDate && !!selectedTime;
       case 4:
-        return false; // Has its own submit button
-      case 5:
-        return false; // Final step
+        return !!selectedDate && !!selectedTime;
       default:
         return false;
     }
   };
 
   // Should we show the navigation?
-  const showNavigation = currentStep < 5;
+  const showNavigation = currentStep < 6;
 
-  // Steps that auto-advance don't need next button
+  // Steps 1 (category), 2 (service), 3 (employee), 5 (customer details) auto-advance or have own submit
   const hideNextButton =
     currentStep === 1 ||
-    currentStep === 4 ||
-    (currentStep === 2 && serviceSubStep === 'service');
+    currentStep === 2 ||
+    currentStep === 3 ||
+    currentStep === 5;
 
   if (!showNavigation) return null;
 
@@ -53,29 +43,40 @@ export default function NavigationBar() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed bottom-0 left-0 right-0 bg-black/20 backdrop-blur-lg border-t border-white/10 py-4 px-6 lg:relative lg:border-0 lg:py-8 lg:px-0 lg:bg-transparent lg:backdrop-blur-none"
+      className="fixed bottom-0 left-0 right-0 backdrop-blur-lg border-t py-4 px-6 lg:relative lg:border-0 lg:py-8 lg:px-0 lg:bg-transparent lg:backdrop-blur-none"
+      style={{
+        backgroundColor: colors.bgOverlay,
+        borderColor: colors.border,
+      }}
     >
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         {/* Back button */}
         <button
           onClick={prevStep}
-          disabled={currentStep === 1 && serviceSubStep === 'category'}
+          disabled={currentStep === 1}
           className={`
             flex items-center gap-2 py-2 px-4 rounded-full transition-all duration-200
-            ${
-              currentStep === 1 && serviceSubStep === 'category'
-                ? 'opacity-0 pointer-events-none'
-                : 'text-white/60 hover:text-white hover:bg-white/10'
-            }
+            ${currentStep === 1 ? 'opacity-0 pointer-events-none' : ''}
           `}
+          style={{ color: colors.textMuted }}
+          onMouseEnter={(e) => {
+            if (currentStep !== 1) {
+              e.currentTarget.style.color = colors.text;
+              e.currentTarget.style.backgroundColor = colors.border;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = colors.textMuted;
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
         >
           <ChevronLeft className="w-4 h-4" />
           <span className="font-medium">Nazaj</span>
         </button>
 
         {/* Step indicator (mobile) */}
-        <div className="lg:hidden text-sm text-white/50 font-mono">
-          {currentStep}/5
+        <div className="lg:hidden text-sm font-mono" style={{ color: colors.textFaint }}>
+          {currentStep}/6
         </div>
 
         {/* Next button */}
@@ -86,11 +87,7 @@ export default function NavigationBar() {
             className={`
               flex items-center gap-2 py-2 px-6 rounded-full border-2 font-medium
               transition-all duration-300
-              ${
-                canProceed()
-                  ? 'hover:text-white'
-                  : 'opacity-40 cursor-not-allowed'
-              }
+              ${!canProceed() ? 'opacity-40 cursor-not-allowed' : ''}
             `}
             style={{
               borderColor: theme.primaryColor,

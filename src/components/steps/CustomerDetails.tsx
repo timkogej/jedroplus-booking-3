@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { sl } from 'date-fns/locale';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { CustomerDetails as CustomerDetailsType } from '@/types';
 
 export default function CustomerDetails() {
@@ -20,6 +21,8 @@ export default function CustomerDetails() {
     nextStep,
   } = useBookingStore();
 
+  const colors = useThemeColors();
+
   // Find selected employee from employeesUI
   const selectedEmployee = employeesUI.find(e => e.id === selectedEmployeeId);
 
@@ -30,11 +33,13 @@ export default function CustomerDetails() {
     phone: '',
     gender: '',
     notes: '',
+    gdprPrivacyConsent: false,
     gdprSendMarketing: false,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerDetailsType, string>>>({});
   const [focused, setFocused] = useState<string | null>(null);
+  const [showPrivacyError, setShowPrivacyError] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof CustomerDetailsType, string>> = {};
@@ -63,8 +68,14 @@ export default function CustomerDetails() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setCustomerDetails(formData);
+    if (!formData.gdprPrivacyConsent) {
+      setShowPrivacyError(true);
+    }
+    if (validateForm() && formData.gdprPrivacyConsent) {
+      setCustomerDetails({
+        ...formData,
+        consentTimestamp: new Date().toISOString(),
+      });
       nextStep();
     }
   };
@@ -115,16 +126,13 @@ export default function CustomerDetails() {
       <motion.div variants={itemVariants} className="relative">
         {/* Label */}
         <label
-          className={`
-            block font-serif text-sm mb-2 transition-colors duration-200
-            ${isFocused ? '' : 'text-white/60'}
-          `}
+          className="block font-serif text-sm mb-2 transition-colors duration-200"
           style={{
-            color: isFocused ? theme.primaryColor : undefined,
+            color: isFocused ? theme.primaryColor : colors.textMuted,
           }}
         >
           {label}
-          {required && <span className="text-white/30 ml-1">*</span>}
+          {required && <span className="ml-1" style={{ color: colors.textGhost }}>*</span>}
         </label>
 
         {/* Input */}
@@ -135,17 +143,14 @@ export default function CustomerDetails() {
           onChange={handleChange}
           onFocus={() => setFocused(name)}
           onBlur={() => setFocused(null)}
-          className={`
-            w-full bg-transparent border-0 border-b-2 py-3 px-0
-            font-sans text-lg outline-none transition-all duration-200 text-white
-            ${hasError ? 'border-red-400' : ''}
-          `}
+          className="w-full bg-transparent border-0 border-b-2 py-3 px-0 font-sans text-lg outline-none transition-all duration-200"
           style={{
+            color: colors.text,
             borderColor: hasError
               ? '#f87171'
               : isFocused
               ? theme.primaryColor
-              : 'rgba(255,255,255,0.2)',
+              : colors.borderMuted,
           }}
         />
 
@@ -172,13 +177,13 @@ export default function CustomerDetails() {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="mb-12">
-        <h1 className="font-serif text-3xl md:text-4xl mb-3 text-white">
+        <h1 className="font-serif text-3xl md:text-4xl mb-3" style={{ color: colors.text }}>
           Tvoji{' '}
           <span style={{ color: theme.primaryColor }}>
             podatki
           </span>
         </h1>
-        <p className="text-white/60">Prosim vnesi svoje kontaktne podatke</p>
+        <p style={{ color: colors.textMuted }}>Prosim vnesi svoje kontaktne podatke</p>
       </motion.div>
 
       <div className="flex flex-col lg:flex-row gap-16">
@@ -195,8 +200,9 @@ export default function CustomerDetails() {
 
             {/* Gender selection - Custom pill buttons */}
             <motion.div variants={itemVariants} className="relative">
-              <label className="block font-serif text-sm mb-4 text-white/60">
-                Spol <span className="text-white/30 ml-1">(neobvezno)</span>
+              <label className="block font-serif text-sm mb-4" style={{ color: colors.textMuted }}>
+                Spol{' '}
+                <span className="ml-1" style={{ color: colors.textGhost }}>(neobvezno)</span>
               </label>
 
               <div className="flex flex-wrap gap-3">
@@ -218,9 +224,9 @@ export default function CustomerDetails() {
                       }}
                       className="px-5 py-2.5 rounded-full border-2 font-medium text-sm transition-all duration-300"
                       style={{
-                        borderColor: isSelected ? theme.primaryColor : 'rgba(255,255,255,0.2)',
+                        borderColor: isSelected ? theme.primaryColor : colors.borderMuted,
                         backgroundColor: isSelected ? `${theme.primaryColor}20` : 'transparent',
-                        color: isSelected ? theme.primaryColor : 'rgba(255,255,255,0.7)',
+                        color: isSelected ? theme.primaryColor : colors.textMuted,
                       }}
                       whileHover={{
                         borderColor: theme.primaryColor,
@@ -237,15 +243,13 @@ export default function CustomerDetails() {
 
             <motion.div variants={itemVariants} className="relative">
               <label
-                className={`
-                  block font-serif text-sm mb-2 transition-colors duration-200
-                  ${focused === 'notes' ? '' : 'text-white/60'}
-                `}
+                className="block font-serif text-sm mb-2 transition-colors duration-200"
                 style={{
-                  color: focused === 'notes' ? theme.primaryColor : undefined,
+                  color: focused === 'notes' ? theme.primaryColor : colors.textMuted,
                 }}
               >
-                Opombe <span className="text-white/30 ml-1">(neobvezno)</span>
+                Opombe{' '}
+                <span className="ml-1" style={{ color: colors.textGhost }}>(neobvezno)</span>
               </label>
 
               <textarea
@@ -256,12 +260,60 @@ export default function CustomerDetails() {
                 onBlur={() => setFocused(null)}
                 rows={3}
                 placeholder="Posebne želje..."
-                className="w-full bg-transparent border-0 border-b-2 py-3 px-0 font-sans text-lg outline-none transition-all duration-200 resize-none text-white placeholder:text-white/30"
+                className="w-full bg-transparent border-0 border-b-2 py-3 px-0 font-sans text-lg outline-none transition-all duration-200 resize-none"
                 style={{
+                  color: colors.text,
                   borderColor:
-                    focused === 'notes' ? theme.primaryColor : 'rgba(255,255,255,0.2)',
+                    focused === 'notes' ? theme.primaryColor : colors.borderMuted,
                 }}
               />
+            </motion.div>
+
+            {/* GDPR Privacy consent - REQUIRED */}
+            <motion.div variants={itemVariants} className="space-y-2">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="gdprPrivacyConsent"
+                  name="gdprPrivacyConsent"
+                  checked={formData.gdprPrivacyConsent || false}
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (e.target.checked) setShowPrivacyError(false);
+                  }}
+                  className="mt-1 w-5 h-5 rounded border-2 bg-transparent cursor-pointer"
+                  style={{
+                    borderColor: showPrivacyError ? '#f87171' : colors.borderStrong,
+                    accentColor: theme.primaryColor,
+                  }}
+                />
+                <label
+                  htmlFor="gdprPrivacyConsent"
+                  className="text-sm cursor-pointer"
+                  style={{ color: colors.textMuted }}
+                >
+                  Strinjam se z obdelavo osebnih podatkov za namen rezervacije termina.{' '}
+                  <a
+                    href="https://jedroplus.com/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: theme.primaryColor }}
+                  >
+                    Preberi politiko zasebnosti
+                  </a>
+                  <span className="ml-1" style={{ color: '#f87171' }}>*</span>
+                </label>
+              </div>
+              {showPrivacyError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-xs ml-8"
+                >
+                  Za oddajo rezervacije se morate strinjati s politiko zasebnosti.
+                </motion.p>
+              )}
             </motion.div>
 
             {/* GDPR Marketing checkbox */}
@@ -274,13 +326,14 @@ export default function CustomerDetails() {
                 onChange={handleChange}
                 className="mt-1 w-5 h-5 rounded border-2 bg-transparent cursor-pointer"
                 style={{
-                  borderColor: 'rgba(255,255,255,0.3)',
+                  borderColor: colors.borderStrong,
                   accentColor: theme.primaryColor,
                 }}
               />
               <label
                 htmlFor="gdprSendMarketing"
-                className="text-white/60 text-sm cursor-pointer"
+                className="text-sm cursor-pointer"
+                style={{ color: colors.textMuted }}
               >
                 Želim prejemati novice in posebne ponudbe po e-pošti
               </label>
@@ -291,16 +344,21 @@ export default function CustomerDetails() {
           <motion.div variants={itemVariants} className="mt-12">
             <button
               type="submit"
+              disabled={!formData.gdprPrivacyConsent}
               className="px-8 py-3 rounded-full border-2 font-medium transition-all duration-300"
               style={{
                 borderColor: theme.primaryColor,
                 color: theme.primaryColor,
+                opacity: formData.gdprPrivacyConsent ? 1 : 0.5,
+                cursor: formData.gdprPrivacyConsent ? 'pointer' : 'not-allowed',
               }}
               onMouseEnter={(e) => {
+                if (!formData.gdprPrivacyConsent) return;
                 e.currentTarget.style.backgroundColor = theme.primaryColor;
                 e.currentTarget.style.color = 'white';
               }}
               onMouseLeave={(e) => {
+                if (!formData.gdprPrivacyConsent) return;
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.color = theme.primaryColor;
               }}
@@ -312,36 +370,36 @@ export default function CustomerDetails() {
 
         {/* Booking Summary */}
         <motion.div variants={itemVariants} className="lg:w-80">
-          <h3 className="font-serif text-xl mb-6 text-white">Povzetek rezervacije</h3>
+          <h3 className="font-serif text-xl mb-6" style={{ color: colors.text }}>Povzetek rezervacije</h3>
 
-          <div className="h-[1px] bg-white/20 mb-6" />
+          <div className="h-[1px] mb-6" style={{ backgroundColor: colors.borderMuted }} />
 
           <div className="space-y-4">
             {selectedEmployee && (
               <div className="flex justify-between">
-                <span className="text-white/50">Specialist</span>
-                <span className="font-medium text-white">{selectedEmployee.label}</span>
+                <span style={{ color: colors.textFaint }}>Specialist</span>
+                <span className="font-medium" style={{ color: colors.text }}>{selectedEmployee.label}</span>
               </div>
             )}
 
             {anyPerson && !selectedEmployee && (
               <div className="flex justify-between">
-                <span className="text-white/50">Specialist</span>
-                <span className="font-medium text-white">Kdorkoli prost</span>
+                <span style={{ color: colors.textFaint }}>Specialist</span>
+                <span className="font-medium" style={{ color: colors.text }}>Kdorkoli prost</span>
               </div>
             )}
 
             {selectedService && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Storitev</span>
-                  <span className="font-medium text-right text-white">
+                  <span style={{ color: colors.textFaint }}>Storitev</span>
+                  <span className="font-medium text-right" style={{ color: colors.text }}>
                     {selectedService.naziv}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Trajanje</span>
-                  <span className="font-light text-sm text-white tracking-wider">
+                  <span style={{ color: colors.textFaint }}>Trajanje</span>
+                  <span className="font-light text-sm tracking-wider" style={{ color: colors.text }}>
                     {formatDuration(selectedService.trajanjeMin)}
                   </span>
                 </div>
@@ -350,8 +408,8 @@ export default function CustomerDetails() {
 
             {selectedDate && (
               <div className="flex justify-between">
-                <span className="text-white/50">Datum</span>
-                <span className="font-medium text-white">
+                <span style={{ color: colors.textFaint }}>Datum</span>
+                <span className="font-medium" style={{ color: colors.text }}>
                   {format(selectedDate, 'd. MMMM yyyy', { locale: sl })}
                 </span>
               </div>
@@ -359,17 +417,17 @@ export default function CustomerDetails() {
 
             {selectedTime && (
               <div className="flex justify-between">
-                <span className="text-white/50">Ura</span>
-                <span className="font-light tracking-wider text-white">{selectedTime}</span>
+                <span style={{ color: colors.textFaint }}>Ura</span>
+                <span className="font-light tracking-wider" style={{ color: colors.text }}>{selectedTime}</span>
               </div>
             )}
           </div>
 
-          <div className="h-[1px] bg-white/20 my-6" />
+          <div className="h-[1px] my-6" style={{ backgroundColor: colors.borderMuted }} />
 
           {selectedService && (
             <div className="flex justify-between items-baseline">
-              <span className="text-white/50">Skupaj</span>
+              <span style={{ color: colors.textFaint }}>Skupaj</span>
               <span
                 className="font-light text-2xl tracking-wider"
                 style={{ color: theme.primaryColor }}

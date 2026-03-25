@@ -47,7 +47,9 @@ export interface CustomerDetails {
   phone: string;
   gender?: string;
   notes?: string;
+  gdprPrivacyConsent?: boolean;
   gdprSendMarketing?: boolean;
+  consentTimestamp?: string;
 }
 
 export interface BookingData {
@@ -67,8 +69,7 @@ export interface BookingConfirmation {
   cas: string;
 }
 
-export type BookingStep = 1 | 2 | 3 | 4 | 5;
-export type ServiceSubStep = 'category' | 'service';
+export type BookingStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Company {
   idPodjetja?: string;
@@ -85,6 +86,7 @@ export interface InitResponse {
   services: Service[];
   serviceCategories: Category[];
   servicesByCategory: Record<string, Service[]>;
+  employeesByServiceId?: Record<string, (string | number)[]>;
   ui: {
     employeeSelection: {
       mode: 'single' | 'multi';

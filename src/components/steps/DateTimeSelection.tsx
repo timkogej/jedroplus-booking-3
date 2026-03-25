@@ -19,6 +19,7 @@ import {
 import { sl } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { fetchTimeSlots } from '@/lib/api';
 
 interface DateTimeSelectionProps {
@@ -31,12 +32,14 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
     selectedTime,
     selectedEmployeeId,
     anyPerson,
+    eligibleEmployeeIds,
     selectedService,
     selectDate,
     selectTime,
     theme,
   } = useBookingStore();
 
+  const colors = useThemeColors();
   const themeColor = theme.primaryColor;
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -74,7 +77,8 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
           dateStr,
           selectedService.id,
           selectedEmployeeId,
-          anyPerson
+          anyPerson,
+          eligibleEmployeeIds
         );
         setTimeSlots(slots);
       } catch (error) {
@@ -86,7 +90,7 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
     }
 
     loadTimeSlots();
-  }, [selectedDate, companySlug, selectedEmployeeId, anyPerson, selectedService]);
+  }, [selectedDate, companySlug, selectedEmployeeId, anyPerson, eligibleEmployeeIds, selectedService]);
 
   const navigateMonth = (delta: number) => {
     setDirection(delta);
@@ -129,11 +133,11 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
     >
       {/* Header */}
       <div className="text-center mb-10">
-        <h2 className="text-3xl md:text-4xl font-light text-white">
+        <h2 className="text-3xl md:text-4xl font-light" style={{ color: colors.text }}>
           Izberi{' '}
           <span style={{ color: themeColor }}>datum in uro</span>
         </h2>
-        <p className="text-white/60 mt-2 font-light">Izberi želeni termin</p>
+        <p className="mt-2 font-light" style={{ color: colors.textMuted }}>Izberi želeni termin</p>
       </div>
 
       {/* Two-column layout */}
@@ -146,7 +150,10 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
             <button
               onClick={() => navigateMonth(-1)}
               disabled={isPrevMonthDisabled}
-              className="text-white/40 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1"
+              className="transition-colors p-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ color: colors.textSubtle }}
+              onMouseEnter={(e) => { if (!isPrevMonthDisabled) e.currentTarget.style.color = colors.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = colors.textSubtle; }}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -160,7 +167,8 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.2 }}
-                className="text-xl font-light text-white tracking-wide"
+                className="text-xl font-light tracking-wide"
+                style={{ color: colors.text }}
               >
                 {format(currentMonth, 'LLLL yyyy', { locale: sl })}
               </motion.h3>
@@ -168,7 +176,10 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
 
             <button
               onClick={() => navigateMonth(1)}
-              className="text-white/40 hover:text-white transition-colors p-1"
+              className="transition-colors p-1"
+              style={{ color: colors.textSubtle }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = colors.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = colors.textSubtle; }}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -179,7 +190,8 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="text-center text-sm text-white/40 font-light py-2"
+                className="text-center text-sm font-light py-2"
+                style={{ color: colors.textSubtle }}
               >
                 {day}
               </div>
@@ -239,12 +251,14 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
 
                     {/* Day number */}
                     <span
-                      className={`
-                        relative z-10 text-base font-light transition-colors
-                        ${isDisabled ? 'text-white/20' : ''}
-                        ${!isDisabled && !isSelected ? 'text-white group-hover:text-white/70' : ''}
-                        ${isSelected ? 'text-white' : ''}
-                      `}
+                      className="relative z-10 text-base font-light transition-colors"
+                      style={{
+                        color: isSelected
+                          ? 'white'
+                          : isDisabled
+                          ? colors.textDisabled
+                          : colors.text,
+                      }}
                     >
                       {format(day, 'd')}
                     </span>
@@ -258,29 +272,29 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
         {/* Right column — Time slots */}
         <div>
           <div className="mb-6">
-            <h3 className="text-xl font-light text-white tracking-wide">
+            <h3 className="text-xl font-light tracking-wide" style={{ color: colors.text }}>
               Prosti termini
             </h3>
           </div>
 
           {!selectedDate ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-white/40 font-light">Najprej izberite datum</p>
+              <p className="font-light" style={{ color: colors.textSubtle }}>Najprej izberite datum</p>
             </div>
           ) : loadingSlots ? (
             <div className="space-y-0">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between py-3">
-                  <div className="w-14 h-4 bg-white/10 rounded animate-pulse" />
-                  <div className="flex-1 mx-4 h-px bg-white/5" />
-                  <div className="w-5 h-5 rounded-full bg-white/10 animate-pulse" />
+                  <div className="w-14 h-4 rounded animate-pulse" style={{ backgroundColor: colors.bgSkeleton }} />
+                  <div className="flex-1 mx-4 h-px" style={{ backgroundColor: colors.border }} />
+                  <div className="w-5 h-5 rounded-full animate-pulse" style={{ backgroundColor: colors.bgSkeleton }} />
                 </div>
               ))}
             </div>
           ) : timeSlots.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-white/60 font-light">Ni prostih terminov</p>
-              <p className="text-white/40 text-sm mt-1 font-light">Izberite drug datum</p>
+              <p className="font-light" style={{ color: colors.textMuted }}>Ni prostih terminov</p>
+              <p className="text-sm mt-1 font-light" style={{ color: colors.textSubtle }}>Izberite drug datum</p>
             </div>
           ) : (
             <motion.div
@@ -302,11 +316,8 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
                   >
                     {/* Time on left */}
                     <span
-                      className={`
-                        text-base font-light tracking-wider transition-colors w-14 text-left
-                        ${!isTimeSelected ? 'text-white/70 group-hover:text-white' : ''}
-                      `}
-                      style={isTimeSelected ? { color: themeColor } : undefined}
+                      className="text-base font-light tracking-wider transition-colors w-14 text-left"
+                      style={{ color: isTimeSelected ? themeColor : colors.textMuted }}
                     >
                       {time}
                     </span>
@@ -317,17 +328,16 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
                       style={{
                         backgroundColor: isTimeSelected
                           ? `${themeColor}40`
-                          : 'rgba(255,255,255,0.1)',
+                          : colors.border,
                       }}
                     />
 
                     {/* Radio circle on right */}
                     <div
-                      className={`
-                        w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0
-                        ${!isTimeSelected ? 'border-white/30 group-hover:border-white/50' : ''}
-                      `}
-                      style={isTimeSelected ? { borderColor: themeColor } : undefined}
+                      className="w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0"
+                      style={{
+                        borderColor: isTimeSelected ? themeColor : colors.borderStrong,
+                      }}
                     >
                       {isTimeSelected && (
                         <div
@@ -357,7 +367,7 @@ export default function DateTimeSelection({ companySlug }: DateTimeSelectionProp
           >
             <Check className="w-4 h-4" style={{ color: themeColor }} />
           </div>
-          <span className="text-white font-light tracking-wide">
+          <span className="font-light tracking-wide" style={{ color: colors.text }}>
             {format(selectedDate, 'd. MMMM yyyy', { locale: sl })} ob {selectedTime}
           </span>
         </motion.div>

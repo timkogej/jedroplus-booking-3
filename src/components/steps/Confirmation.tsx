@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { sl } from 'date-fns/locale';
 import { Check, Calendar, User, Sparkles, CalendarPlus, Share2 } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { submitBooking } from '@/lib/api';
 
 interface ConfirmationProps {
@@ -28,6 +29,8 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
     isSubmitting,
     reset,
   } = useBookingStore();
+
+  const colors = useThemeColors();
 
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -58,7 +61,9 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
         phone: customerDetails.phone,
         gender: customerDetails.gender,
         notes: customerDetails.notes,
+        gdprPrivacyConsent: customerDetails.gdprPrivacyConsent,
         gdprSendMarketing: customerDetails.gdprSendMarketing,
+        consentTimestamp: customerDetails.consentTimestamp,
       });
 
       if (response.success) {
@@ -198,7 +203,8 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="font-serif text-3xl md:text-4xl mb-3 text-white"
+          className="font-serif text-3xl md:text-4xl mb-3"
+          style={{ color: colors.text }}
         >
           Rezervacija{' '}
           <span style={{ color: theme.primaryColor }}>
@@ -210,7 +216,8 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="text-white/50 mb-8"
+          className="mb-8"
+          style={{ color: colors.textFaint }}
         >
           Veselimo se tvojega obiska!
         </motion.p>
@@ -222,33 +229,33 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           transition={{ delay: 0.7 }}
           className="text-left space-y-4 mb-12"
         >
-          <div className="h-[1px] bg-white/20" />
+          <div className="h-[1px]" style={{ backgroundColor: colors.borderMuted }} />
 
           {selectedEmployee && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Specialist</span>
-              <span className="font-medium text-white">{selectedEmployee.label}</span>
+              <span style={{ color: colors.textFaint }}>Specialist</span>
+              <span className="font-medium" style={{ color: colors.text }}>{selectedEmployee.label}</span>
             </div>
           )}
 
           {anyPerson && !selectedEmployee && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Specialist</span>
-              <span className="font-medium text-white">Kdorkoli prost</span>
+              <span style={{ color: colors.textFaint }}>Specialist</span>
+              <span className="font-medium" style={{ color: colors.text }}>Kdorkoli prost</span>
             </div>
           )}
 
           {bookingConfirmation.storitev && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Storitev</span>
-              <span className="font-medium text-white">{bookingConfirmation.storitev}</span>
+              <span style={{ color: colors.textFaint }}>Storitev</span>
+              <span className="font-medium" style={{ color: colors.text }}>{bookingConfirmation.storitev}</span>
             </div>
           )}
 
           {bookingConfirmation.datum && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Datum</span>
-              <span className="font-medium text-white">
+              <span style={{ color: colors.textFaint }}>Datum</span>
+              <span className="font-medium" style={{ color: colors.text }}>
                 {bookingConfirmation.datum}
               </span>
             </div>
@@ -256,21 +263,21 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
 
           {bookingConfirmation.cas && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Ura</span>
-              <span className="font-light tracking-wider text-white">{bookingConfirmation.cas}</span>
+              <span style={{ color: colors.textFaint }}>Ura</span>
+              <span className="font-light tracking-wider" style={{ color: colors.text }}>{bookingConfirmation.cas}</span>
             </div>
           )}
 
           {selectedService && (
             <div className="flex justify-between py-2">
-              <span className="text-white/50">Cena</span>
+              <span style={{ color: colors.textFaint }}>Cena</span>
               <span className="font-light tracking-wider" style={{ color: theme.primaryColor }}>
                 €{selectedService.cena}
               </span>
             </div>
           )}
 
-          <div className="h-[1px] bg-white/20" />
+          <div className="h-[1px]" style={{ backgroundColor: colors.borderMuted }} />
         </motion.div>
 
         {/* Actions */}
@@ -313,7 +320,10 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           {/* Nova rezervacija */}
           <button
             onClick={reset}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-full font-light tracking-wide transition-all duration-300 text-white/50 hover:text-white"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-full font-light tracking-wide transition-all duration-300"
+            style={{ color: colors.textFaint }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = colors.text; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = colors.textFaint; }}
           >
             Nova rezervacija
           </button>
@@ -331,13 +341,13 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
     >
       {/* Header */}
       <div className="mb-12">
-        <h1 className="font-serif text-3xl md:text-4xl mb-3 text-white">
+        <h1 className="font-serif text-3xl md:text-4xl mb-3" style={{ color: colors.text }}>
           Potrdi{' '}
           <span style={{ color: theme.primaryColor }}>
             rezervacijo
           </span>
         </h1>
-        <p className="text-white/60">Prosim preglej podrobnosti termina</p>
+        <p style={{ color: colors.textMuted }}>Prosim preglej podrobnosti termina</p>
       </div>
 
       {/* Error message */}
@@ -355,16 +365,16 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
       <div className="space-y-8 mb-12">
         {/* Appointment Card */}
         <div className="space-y-6">
-          <div className="h-[1px] bg-white/20" />
+          <div className="h-[1px]" style={{ backgroundColor: colors.borderMuted }} />
 
           {/* Service */}
           {selectedService && (
             <div className="flex items-start gap-4 py-2">
-              <Sparkles className="w-5 h-5 text-white/40 mt-1" />
+              <Sparkles className="w-5 h-5 mt-1 flex-shrink-0" style={{ color: colors.textSubtle }} />
               <div className="flex-1">
-                <p className="text-white/50 text-sm mb-1">Storitev</p>
-                <p className="font-serif text-lg text-white">{selectedService.naziv}</p>
-                <p className="text-white/40 text-sm">
+                <p className="text-sm mb-1" style={{ color: colors.textFaint }}>Storitev</p>
+                <p className="font-serif text-lg" style={{ color: colors.text }}>{selectedService.naziv}</p>
+                <p className="text-sm" style={{ color: colors.textSubtle }}>
                   <span className="font-light tracking-wider">{formatDuration(selectedService.trajanjeMin)}</span>
                   {' · '}€{selectedService.cena}
                 </p>
@@ -375,22 +385,22 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           {/* Specialist */}
           {selectedEmployee && (
             <div className="flex items-start gap-4 py-2">
-              <User className="w-5 h-5 text-white/40 mt-1" />
+              <User className="w-5 h-5 mt-1 flex-shrink-0" style={{ color: colors.textSubtle }} />
               <div className="flex-1">
-                <p className="text-white/50 text-sm mb-1">Specialist</p>
-                <p className="font-serif text-lg text-white">{selectedEmployee.label}</p>
-                <p className="text-white/40 text-sm">{selectedEmployee.subtitle}</p>
+                <p className="text-sm mb-1" style={{ color: colors.textFaint }}>Specialist</p>
+                <p className="font-serif text-lg" style={{ color: colors.text }}>{selectedEmployee.label}</p>
+                <p className="text-sm" style={{ color: colors.textSubtle }}>{selectedEmployee.subtitle}</p>
               </div>
             </div>
           )}
 
           {anyPerson && !selectedEmployee && (
             <div className="flex items-start gap-4 py-2">
-              <User className="w-5 h-5 text-white/40 mt-1" />
+              <User className="w-5 h-5 mt-1 flex-shrink-0" style={{ color: colors.textSubtle }} />
               <div className="flex-1">
-                <p className="text-white/50 text-sm mb-1">Specialist</p>
-                <p className="font-serif text-lg text-white">Kdorkoli prost</p>
-                <p className="text-white/40 text-sm">Prvi prosti termin</p>
+                <p className="text-sm mb-1" style={{ color: colors.textFaint }}>Specialist</p>
+                <p className="font-serif text-lg" style={{ color: colors.text }}>Kdorkoli prost</p>
+                <p className="text-sm" style={{ color: colors.textSubtle }}>Prvi prosti termin</p>
               </div>
             </div>
           )}
@@ -398,42 +408,42 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
           {/* Date & Time */}
           {selectedDate && selectedTime && (
             <div className="flex items-start gap-4 py-2">
-              <Calendar className="w-5 h-5 text-white/40 mt-1" />
+              <Calendar className="w-5 h-5 mt-1 flex-shrink-0" style={{ color: colors.textSubtle }} />
               <div className="flex-1">
-                <p className="text-white/50 text-sm mb-1">Datum in ura</p>
-                <p className="font-serif text-lg text-white">
+                <p className="text-sm mb-1" style={{ color: colors.textFaint }}>Datum in ura</p>
+                <p className="font-serif text-lg" style={{ color: colors.text }}>
                   {format(selectedDate, 'EEEE, d. MMMM yyyy', { locale: sl })}
                 </p>
-                <p className="font-light tracking-wider text-white/40">{selectedTime}</p>
+                <p className="font-light tracking-wider" style={{ color: colors.textSubtle }}>{selectedTime}</p>
               </div>
             </div>
           )}
 
-          <div className="h-[1px] bg-white/20" />
+          <div className="h-[1px]" style={{ backgroundColor: colors.borderMuted }} />
 
           {/* Customer Info */}
           {customerDetails && (
             <div className="py-2">
-              <p className="text-white/50 text-sm mb-3">Tvoji podatki</p>
-              <p className="font-medium text-white">
+              <p className="text-sm mb-3" style={{ color: colors.textFaint }}>Tvoji podatki</p>
+              <p className="font-medium" style={{ color: colors.text }}>
                 {customerDetails.firstName} {customerDetails.lastName}
               </p>
-              <p className="text-white/50 text-sm">{customerDetails.email}</p>
-              <p className="text-white/50 text-sm">{customerDetails.phone}</p>
+              <p className="text-sm" style={{ color: colors.textFaint }}>{customerDetails.email}</p>
+              <p className="text-sm" style={{ color: colors.textFaint }}>{customerDetails.phone}</p>
               {customerDetails.notes && (
-                <p className="text-white/40 text-sm mt-2 italic">
+                <p className="text-sm mt-2 italic" style={{ color: colors.textSubtle }}>
                   &quot;{customerDetails.notes}&quot;
                 </p>
               )}
             </div>
           )}
 
-          <div className="h-[1px] bg-white/20" />
+          <div className="h-[1px]" style={{ backgroundColor: colors.borderMuted }} />
 
           {/* Total */}
           {selectedService && (
             <div className="flex justify-between items-baseline py-4">
-              <span className="text-white/50">Skupaj</span>
+              <span style={{ color: colors.textFaint }}>Skupaj</span>
               <span
                 className="font-light text-3xl tracking-wider"
                 style={{ color: theme.primaryColor }}
@@ -474,7 +484,7 @@ export default function Confirmation({ companySlug }: ConfirmationProps) {
         )}
       </motion.button>
 
-      <p className="text-white/40 text-sm mt-4">
+      <p className="text-sm mt-4" style={{ color: colors.textSubtle }}>
         Potrditev bo poslana na vaš email naslov
       </p>
     </motion.div>
